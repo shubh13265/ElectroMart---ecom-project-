@@ -1,6 +1,6 @@
 # 🏪 Electro-Mart | E-Commerce Platform
 
-A full-stack e-commerce application with user authentication, product management and tracking , shopping cart functionality, and an advanced admin dashboard.
+A full-stack e-commerce application with user authentication, product management and tracking , shopping cart functionality and an advanced admin dashboard.
 
 
 ## 👨‍💻 Author
@@ -92,10 +92,6 @@ NODE_ENV=development
 ```bash
 npm start
 ```
-### ** Step 5 : Access locally**
-
-Backend: http://localhost:3001
-Frontend: Open index.html in your browser
 ---
 
 ## 📧 Author
