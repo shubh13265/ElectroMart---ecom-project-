@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Commerce | My Orders</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            margin: 0;
+            padding-top: 72px;
+        }
+        .navbar {
+            background: rgba(15,23,42,0.96);
+            backdrop-filter: blur(12px);
+            padding: 0 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 72px;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(148,163,184,0.35);
+        }
+        .navbar h2 {
+            margin: 0;
+            font-size: 1rem;
+            color: #e5e7eb;
+        }
+        .navbar span {
+            display: block;
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        .nav-btn {
+            background: #22c55e;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 24px auto 40px auto;
+            padding: 0 18px;
+        }
+        #loading-msg, #no-orders-msg {
+            text-align: center;
+            font-size: 0.95rem;
+            color: #e5e7eb;
+            margin-top: 40px;
+        }
+        .order-group {
+            background: #f9fafb;
+            border-radius: 18px;
+            box-shadow: 0 12px 28px rgba(15,23,42,0.3);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .order-header {
+            background: #e5e7eb;
+            padding: 15px 18px;
+            border-bottom: 1px solid #d1d5db;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .order-header-left {
+            flex: 1;
+            width: 100%;
+        }
+        .order-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #111827;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .order-meta {
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+        .order-meta strong {
+            color: #1f2937;
+        }
+        .shipping-info {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #9ca3af;
+            font-size: 0.8rem;
+            color: #4b5563;
+        }
+        .cancel-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            align-self: flex-start;
+        }
+        .cancel-btn:hover {
+            background: #dc2626;
+            box-shadow: 0 4px 12px rgba(239,68,68,0.4);
+        }
+        .cancel-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .order-item {
+            padding: 15px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+        }
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        .item-details h4 {
+            margin: 0 0 4px 0;
+            font-size: 0.95rem;
+            color: #111827;
+        }
+        .item-details p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        .item-price {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #16a34a;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: #22c55e;
+            color: white;
+            vertical-align: middle;
+        }
+
+        /* --- PROGRESS BAR STYLES --- */
+        .progress-track-container {
+            margin: 20px 0 10px 0;
+            width: 100%;
+            max-width: 500px;
+        }
+        .progress-track {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+        /* Grey background line */
+        .progress-track::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0; 
+            right: 0;
+            height: 4px;
+            background: #cbd5e1;
+            z-index: 0;
+        }
+        /* Green active line */
+        .progress-fill {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            height: 4px;
+            background: #22c55e;
+            z-index: 1;
+            transition: width 0.4s ease;
+        }
+        .step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+        .step-circle {
+            width: 30px; 
+            height: 30px;
+            background: #cbd5e1;
+            border-radius: 50%;
+            margin: 0 auto 8px auto;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            color: #64748b;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: background 0.3s;
+            border: 2px solid #e5e7eb;
+        }
+        .step-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        /* Active Step Styles */
+        .step.active .step-circle {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+        .step.active .step-label {
+            color: #15803d;
+            font-weight: 700;
+        }
+
+        /* Confirmation Modal */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1200;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: #f9fafb;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 20px 44px rgba(15,23,42,0.6);
+        }
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .modal-title {
+            margin: 0 0 8px 0;
+            font-size: 1.2rem;
+            color: #111827;
+        }
+        .modal-message {
+            margin: 0 0 20px 0;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .modal-btn {
+            padding: 9px 18px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .modal-btn.confirm {
+            background: #ef4444;
+            color: white;
+        }
+        .modal-btn.cancel {
+            background: #e5e7eb;
+            color: #111827;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div>
+            <h2>My Order History</h2>
+            <span>View details, track shipments, and manage orders.</span>
+        </div>
+        <button class="nav-btn" id="back-to-shop-btn">Back to Shop</button>
+    </nav>
+
+    <div class="container" id="orders-container">
+        <p id="loading-msg">Loading your orders from database...</p>
+    </div>
+
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon">⚠️</div>
+            <h3 class="modal-title" id="modal-title">Cancel Order?</h3>
+            <p class="modal-message" id="modal-message">Are you sure you want to cancel this order? This action cannot be undone and stock will be restored.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" id="confirm-btn">Yes, Cancel Order</button>
+                <button class="modal-btn cancel" id="cancel-modal-btn">No, Keep Order</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const ordersContainer = document.getElementById('orders-container');
+            const loadingMsg = document.getElementById('loading-msg');
+            const backToShopBtn = document.getElementById('back-to-shop-btn');
+            const modalOverlay = document.getElementById('modal-overlay');
+            const confirmBtn = document.getElementById('confirm-btn');
+            const cancelModalBtn = document.getElementById('cancel-modal-btn');
+
+            let orderToCancel = null;
+
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                alert('You must be logged in to view this page.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            backToShopBtn.addEventListener('click', () => {
+                window.location.href = 'shop.html';
+            });
+
+            cancelModalBtn.addEventListener('click', () => {
+                modalOverlay.classList.remove('show');
+            });
+
+            confirmBtn.addEventListener('click', async () => {
+                if (!orderToCancel) return;
+
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = 'Cancelling...';
+
+                try {
+                    const response = await fetch(`http://localhost:3001/api/cancel-order/${orderToCancel}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: user.user_id })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        modalOverlay.classList.remove('show');
+                        alert('✅ ' + data.message);
+                        fetchOrders(); // Refresh order list
+                    } else {
+                        alert('❌ ' + data.message);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('❌ Failed to cancel order. Please try again.');
+                } finally {
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = 'Yes, Cancel Order';
+                    orderToCancel = null;
+                }
+            });
+
+            window.showCancelModal = (orderId) => {
+                orderToCancel = orderId;
+                modalOverlay.classList.add('show');
+            };
+
+            async function fetchOrders() {
+                ordersContainer.innerHTML = '<p id="loading-msg">Loading your orders from database...</p>';
+                
+                try {
+                    const response = await fetch(`http://localhost:3001/api/my-orders/${user.user_id}`);
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch orders');
+                    }
+                    
+                    const orders = await response.json();
+
+                    const loadingMsg = document.getElementById('loading-msg');
+                    if (loadingMsg) loadingMsg.style.display = 'none';
+
+                    if (!Array.isArray(orders) || orders.length === 0) {
+                        ordersContainer.innerHTML = '<p id="no-orders-msg">You have not placed any orders yet.</p>';
+                        return;
+                    }
+
+                    // 1. Group orders by order_id
+                    const grouped = {};
+                    orders.forEach(item => {
+                        if (!grouped[item.order_id]) {
+                            grouped[item.order_id] = {
+                                order_id: item.order_id,
+                                order_date: item.order_date,
+                                total_amount: item.total_amount,
+                                shipping_address: item.shipping_address,
+                                payment_method: item.payment_method,
+                                status: item.status, 
+                                items: []
+                            };
+                        }
+                        grouped[item.order_id].items.push(item);
+                    });
+
+                    // 2. SORTING LOGIC: Newest date first
+                    const sortedOrders = Object.values(grouped).sort((a, b) => {
+                        return new Date(b.order_date) - new Date(a.order_date);
+                    });
+
+                    ordersContainer.innerHTML = '';
+
+                    // 3. Render Sorted Orders
+                    sortedOrders.forEach(order => {
+                        const orderId = order.order_id;
+                        const orderDate = new Date(order.order_date).toLocaleString('en-IN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+
+                        const totalInr = Math.round(order.total_amount || 0);
+                        const address = order.shipping_address || 'Address not available';
+                        const payment = order.payment_method ? order.payment_method.toUpperCase() : 'COD';
+                        
+                        // Status Logic
+                        const statusRaw = order.status || 'Pending';
+                        const status = statusRaw.toLowerCase(); 
+                        
+                        // Determine Progress Bar State
+                        let progressBarHtml = '';
+                        let cancelButtonDisabled = '';
+                        
+                        if (status === 'cancelled') {
+                            progressBarHtml = '<span class="status-badge" style="background: #ef4444;">❌ Order Cancelled</span>';
+                            cancelButtonDisabled = 'disabled';
+                        } else {
+                            // Calculate width
+                            let progressWidth = '0%';
+                            let step1Class = 'active';
+                            let step2Class = '';
+                            let step3Class = '';
+
+                            if (status === 'shipped') {
+                                progressWidth = '50%';
+                                step1Class = 'active';
+                                step2Class = 'active';
+                            } else if (status === 'delivered') {
+                                progressWidth = '100%';
+                                step1Class = 'active';
+                                step2Class = 'active';
+                                step3Class = 'active';
+                                cancelButtonDisabled = 'disabled'; // Cannot cancel if delivered
+                            } else {
+                                // Default to Pending
+                                progressWidth = '0%';
+                                step1Class = 'active';
+                            }
+
+                            progressBarHtml = `
+                                <div class="progress-track-container">
+                                    <div class="progress-track">
+                                        <div class="progress-fill" style="width: ${progressWidth}"></div>
+                                        <div class="step ${step1Class}">
+                                            <div class="step-circle">1</div>
+                                            <div class="step-label">Pending</div>
+                                        </div>
+                                        <div class="step ${step2Class}">
+                                            <div class="step-circle">2</div>
+                                            <div class="step-label">Shipped</div>
+                                        </div>
+                                        <div class="step ${step3Class}">
+                                            <div class="step-circle">3</div>
+                                            <div class="step-label">Delivered</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'order-group';
+
+                        let itemsHtml = '';
+                        order.items.forEach(it => {
+                            const priceInr = Math.round(it.price_per_item || 0);
+                            const itemTotalInr = Math.round(priceInr * it.quantity);
+                            
+                            itemsHtml += `
+                                <div class="order-item">
+                                    <div class="item-details">
+                                        <h4>${it.product_name}</h4>
+                                        <p>Quantity: ${it.quantity} × ₹${priceInr.toLocaleString('en-IN')}</p>
+                                    </div>
+                                    <div class="item-price">₹${itemTotalInr.toLocaleString('en-IN')}</div>
+                                </div>
+                            `;
+                        });
+
+                        wrapper.innerHTML = `
+                            <div class="order-header">
+                                <div class="order-header-left">
+                                    <h3>Order #${orderId}</h3>
+                                    ${progressBarHtml}
+                                    <div class="order-meta">
+                                        <strong>Date:</strong> ${orderDate} &nbsp;|&nbsp; 
+                                        <strong>Total:</strong> ₹${totalInr.toLocaleString('en-IN')} &nbsp;|&nbsp;
+                                        <strong>Payment:</strong> ${payment}
+                                    </div>
+                                    <div class="shipping-info">
+                                        <strong>📍 Delivery To:</strong> ${address}
+                                    </div>
+                                </div>
+                                <button class="cancel-btn" onclick="showCancelModal(${orderId})" ${cancelButtonDisabled}>
+                                    ❌ Cancel Order
+                                </button>
+                            </div>
+                            ${itemsHtml}
+                        `;
+                        ordersContainer.appendChild(wrapper);
+                    });
+                } catch (err) {
+                    console.error('Error fetching orders:', err);
+                    ordersContainer.innerHTML = '<p style="color: #fca5a5; text-align: center;">Failed to load orders. Please try again.</p>';
+                }
+            }
+
+            fetchOrders();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+        /* [YOUR ORIGINAL DESIGN - KEPT EXACTLY THE SAME] */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #0a0e27; min-height: 100vh; color: #e5e7eb; position: relative; overflow-x: hidden; scroll-behavior: smooth; }
+        body::before { content: ''; position: fixed; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); background-size: 400% 400%; animation: gradientShift 15s ease infinite; opacity: 0.15; z-index: -1; }
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        body::after { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(102, 126, 234, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(102, 126, 234, 0.03) 1px, transparent 1px); background-size: 50px 50px; z-index: -1; }
+        
+        .password-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .password-overlay.hidden { display: none; }
+        .password-modal { background: #1e293b; border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 24px; padding: 40px; width: 90%; max-width: 450px; box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6); animation: modalSlideIn 0.4s ease; }
+        @keyframes modalSlideIn { from { opacity: 0; transform: scale(0.9) translateY(-20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .password-modal h2 { font-size: 1.8rem; font-weight: 800; color: #f9fafb; margin-bottom: 10px; text-align: center; }
+        .password-modal p { color: #94a3b8; text-align: center; margin-bottom: 30px; font-size: 0.95rem; }
+        .password-input-group { margin-bottom: 20px; }
+        .password-input-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #94a3b8; font-weight: 600; }
+        .password-input-group input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(102, 126, 234, 0.3); background: rgba(15, 23, 42, 0.5); color: #e5e7eb; font-family: 'Inter', sans-serif; font-size: 1rem; transition: all 0.3s ease; }
+        .password-input-group input:focus { outline: none; border-color: #667eea; background: rgba(15, 23, 42, 0.7); box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2); }
+        .password-error { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; display: none; }
+        .password-error.show { display: block; }
+        .password-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 12px; color: white; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 25px rgba(34, 197, 94, 0.4); }
+        .password-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(34, 197, 94, 0.5); }
+        .password-cancel { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; color: #fca5a5; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 10px; transition: all 0.3s ease; }
+        .password-cancel:hover { background: rgba(239, 68, 68, 0.3); }
+        
+        #main-content { display: none; }
+        #main-content.unlocked { display: block; }
+        
+        .header { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(102, 126, 234, 0.2); padding: 25px 35px; margin-bottom: 35px; border-radius: 0 0 24px 24px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); animation: slideDown 0.6s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        .header-content { max-width: 1600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header-title h1 { font-size: 2rem; font-weight: 900; background: linear-gradient(135deg, #fff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 5px; }
+        .header-title p { color: #94a3b8; font-size: 0.95rem; }
+        .header-actions { display: flex; gap: 12px; }
+        
+        .btn { padding: 12px 20px; border-radius: 12px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.3s ease; font-family: 'Inter', sans-serif; }
+        .btn-primary { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5); }
+        .btn-secondary { background: rgba(102, 126, 234, 0.2); color: #a78bfa; border: 1px solid rgba(102, 126, 234, 0.3); }
+        .btn-secondary:hover { background: rgba(102, 126, 234, 0.3); transform: translateY(-2px); }
+        
+        .container { max-width: 1600px; margin: 0 auto; padding: 0 35px 50px 35px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        /* Updated Stat Card to be clickable */
+        .stat-card { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 20px; padding: 28px; position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: fadeInUp 0.6s ease backwards; cursor: pointer; }
+        .stat-card:nth-child(1) { animation-delay: 0.1s; } .stat-card:nth-child(2) { animation-delay: 0.2s; } .stat-card:nth-child(3) { animation-delay: 0.3s; } .stat-card:nth-child(4) { animation-delay: 0.4s; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb); background-size: 200% 100%; animation: shimmer 3s infinite; }
+        @keyframes shimmer { 0%, 100% { background-position: 0% 0%; } 50% { background-position: 100% 0%; } }
+        .stat-card:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3); border-color: rgba(102, 126, 234, 0.4); }
+        .stat-icon { font-size: 2.5rem; margin-bottom: 15px; filter: drop-shadow(0 4px 10px rgba(102, 126, 234, 0.4)); }
+        .stat-card h3 { font-size: 0.9rem; color: #94a3b8; font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 2.5rem; font-weight: 900; background: linear-gradient(135deg, #fff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        
+        .section { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 24px; padding: 30px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); animation: fadeIn 0.8s ease; scroll-margin-top: 100px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid rgba(102, 126, 234, 0.2); }
+        .section-header h2 { font-size: 1.5rem; font-weight: 800; color: #f9fafb; }
+        
+        .table-wrapper { overflow-x: auto; border-radius: 12px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; }
+        thead { background: rgba(102, 126, 234, 0.1); }
+        th { padding: 16px 20px; text-align: left; color: #a78bfa; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid rgba(102, 126, 234, 0.3); }
+        tbody tr { border-bottom: 1px solid rgba(102, 126, 234, 0.1); transition: all 0.3s ease; }
+        tbody tr:hover { background: rgba(102, 126, 234, 0.05); }
+        td { padding: 18px 20px; color: #e5e7eb; }
+        
+        .category-badge { display: inline-block; padding: 4px 12px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: #a78bfa; }
+        .btn-sm { padding: 7px 14px; font-size: 0.8rem; border-radius: 8px; margin-right: 6px; }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4); }
+        .btn-edit { background: rgba(102, 126, 234, 0.2); color: #a78bfa; border: 1px solid rgba(102, 126, 234, 0.3); }
+        .btn-edit:hover { background: rgba(102, 126, 234, 0.3); transform: translateY(-2px); }
+        .btn-view { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .btn-view:hover { background: rgba(34, 197, 94, 0.3); transform: translateY(-2px); }
+        .loading { text-align: center; padding: 40px; color: #94a3b8; font-size: 1.1rem; }
+        
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: #1e293b; border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 24px; width: 90%; max-width: 550px; max-height: 85vh; overflow-y: auto; padding: 35px; box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5); animation: modalSlideIn 0.4s ease; }
+        .modal-content h3 { font-size: 1.6rem; font-weight: 800; color: #f9fafb; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(102, 126, 234, 0.2); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #94a3b8; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(102, 126, 234, 0.3); background: rgba(15, 23, 42, 0.5); color: #e5e7eb; font-family: 'Inter', sans-serif; font-size: 0.95rem; transition: all 0.3s ease; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; background: rgba(15, 23, 42, 0.7); box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2); }
+        .form-group textarea { resize: vertical; min-height: 90px; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 30px; }
+        .modal-buttons button { flex: 1; padding: 14px; font-size: 1rem; }
+        
+        .status-select { background: #0a0e27; color: #e5e7eb; border: 1px solid rgba(102, 126, 234, 0.3); padding: 5px 10px; border-radius: 6px; font-family: inherit; cursor: pointer; }
+        .status-select:focus { outline: none; border-color: #667eea; }
+        
+        .order-detail-row { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .order-detail-row label { color: #94a3b8; font-weight: 600; font-size: 0.9rem; }
+        .order-detail-row span { color: #e5e7eb; font-size: 0.95rem; text-align: right; max-width: 60%; }
+
+        @media (max-width: 968px) { .header-content { flex-direction: column; gap: 20px; text-align: center; } .stats-grid { grid-template-columns: 1fr; } .table-wrapper { overflow-x: scroll; } }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(102, 126, 234, 0.5); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(102, 126, 234, 0.7); }
+    </style>
+</head>
+<body>
+    <div class="password-overlay" id="password-overlay">
+        <div class="password-modal">
+            <h2>🔒 Admin Access</h2>
+            <p>Enter admin password to continue</p>
+            <div class="password-error" id="password-error">Incorrect password. Please try again.</div>
+            <form id="password-form">
+                <div class="password-input-group">
+                    <label>Admin Password</label>
+                    <input type="password" id="admin-password" placeholder="Enter password" required autocomplete="off" />
+                </div>
+                <button type="submit" class="password-submit">🔓 Unlock Dashboard</button>
+                <button type="button" class="password-cancel" onclick="window.location.href='shop.html'">❌ Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>🛡️ Admin Dashboard</h1>
+                    <p>Manage products, monitor orders, and view analytics • All prices in ₹ (INR)</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="window.location.href='shop.html'">🏪 Back to Shop</button>
+                    <button class="btn btn-primary" onclick="openAddProductModal()">➕ Add Product</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card" onclick="scrollToSection('products-section')">
+                    <div class="stat-icon">📦</div>
+                    <h3>Total Products</h3>
+                    <div class="stat-value" id="total-products">0</div>
+                </div>
+                <div class="stat-card" onclick="scrollToSection('orders-section')">
+                    <div class="stat-icon">🛒</div>
+                    <h3>Total Orders</h3>
+                    <div class="stat-value" id="total-orders">0</div>
+                </div>
+                <div class="stat-card" onclick="scrollToSection('users-section')">
+                    <div class="stat-icon">👥</div>
+                    <h3>Total Users</h3>
+                    <div class="stat-value" id="total-users">0</div>
+                </div>
+                <div class="stat-card" onclick="scrollToSection('orders-section')">
+                    <div class="stat-icon">💰</div>
+                    <h3>Total Revenue</h3>
+                    <div class="stat-value" id="total-revenue">₹0</div>
+                </div>
+            </div>
+
+            <div class="section" id="products-section">
+                <div class="section-header"><h2>📦 All Products</h2></div>
+                <div id="products-loading" class="loading">Loading products...</div>
+                <div class="table-wrapper" id="products-table-wrapper" style="display: none;">
+                    <table id="products-table">
+                        <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Price (₹)</th><th>Stock</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section" id="orders-section">
+                <div class="section-header"><h2>📊 All Orders</h2></div>
+                <div id="orders-loading" class="loading">Loading orders...</div>
+                <div class="table-wrapper" id="orders-table-wrapper" style="display: none;">
+                    <table id="orders-table">
+                        <thead><tr><th>Order ID</th><th>User</th><th>Products</th><th>Date</th><th>Items</th><th>Total (₹)</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section" id="users-section">
+                <div class="section-header"><h2>👥 All Users</h2></div>
+                <div id="users-loading" class="loading">Loading users...</div>
+                <div class="table-wrapper" id="users-table-wrapper" style="display: none;">
+                    <table id="users-table">
+                        <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Add New Product</h3>
+            <form id="product-form">
+                <div class="form-group"><label>Product Name *</label><input type="text" id="product-name" required /></div>
+                <div class="form-group"><label>Description</label><textarea id="product-description"></textarea></div>
+                <div class="form-group"><label>Price (₹) *</label><input type="number" step="0.01" id="product-price" required /></div>
+                <div class="form-group"><label>Stock Quantity *</label><input type="number" id="product-stock" required /></div>
+                <div class="form-group"><label>Category *</label><select id="product-category" required><option value="general">General</option><option value="audio">Audio</option><option value="wearable">Wearable</option><option value="accessory">Accessory</option><option value="peripheral">Peripheral</option><option value="clothing">Clothing</option><option value="home">Home</option><option value="storage">Storage</option><option value="gadget">Gadget</option></select></div>
+                <div class="form-group"><label>Image URL</label><input type="url" id="product-image" /></div>
+                <div class="modal-buttons"><button type="submit" class="btn btn-primary">💾 Save Product</button><button type="button" class="btn btn-danger" onclick="closeProductModal()">❌ Cancel</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="order-details-modal">
+        <div class="modal-content">
+            <h3>📦 Order Details</h3>
+            <div id="order-details-content"></div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('order-details-modal').classList.remove('show')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = 'shubham'; 
+
+        document.getElementById('password-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (document.getElementById('admin-password').value === ADMIN_PASSWORD) {
+                document.getElementById('password-overlay').classList.add('hidden');
+                document.getElementById('main-content').classList.add('unlocked');
+                loadAdminData();
+            } else {
+                document.getElementById('password-error').classList.add('show');
+                setTimeout(() => document.getElementById('password-error').classList.remove('show'), 3000);
+            }
+        });
+
+        let editingProductId = null;
+        let allOrders = [];
+
+        function loadAdminData() { fetchStats(); fetchProducts(); fetchOrders(); fetchUsers(); }
+
+        // Smooth Scroll Function
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function fetchStats() {
+            try {
+                const pRes = await fetch('http://localhost:3001/api/products');
+                const products = await pRes.json();
+                document.getElementById('total-products').textContent = Array.isArray(products) ? products.length : 0;
+
+                const uRes = await fetch('http://localhost:3001/api/admin/users');
+                const users = await uRes.json();
+                document.getElementById('total-users').textContent = Array.isArray(users) ? users.length : 0;
+
+                const rRes = await fetch('http://localhost:3001/api/admin/revenue');
+                const revenue = await rRes.json();
+                document.getElementById('total-orders').textContent = revenue.total_orders || 0;
+                document.getElementById('total-revenue').textContent = '₹' + Math.round(revenue.total_revenue || 0).toLocaleString('en-IN');
+            } catch (err) { console.error('Error fetching stats:', err); }
+        }
+
+        async function fetchProducts() {
+            try {
+                const res = await fetch('http://localhost:3001/api/products');
+                const products = await res.json();
+                document.getElementById('products-loading').style.display = 'none';
+                document.getElementById('products-table-wrapper').style.display = 'block';
+                const tbody = document.querySelector('#products-table tbody');
+                tbody.innerHTML = products.map(p => `
+                    <tr>
+                        <td><strong>#${p.product_id}</strong></td>
+                        <td>${p.name}</td>
+                        <td><span class="category-badge">${p.category}</span></td>
+                        <td><strong>₹${Math.round(p.price).toLocaleString('en-IN')}</strong></td>
+                        <td>${p.stock_quantity}</td>
+                        <td>
+                            <button class="btn btn-sm btn-edit" onclick="editProduct(${p.product_id})">✏️ Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.product_id}, '${p.name.replace(/'/g, "\\'")}')">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        async function fetchOrders() {
+            try {
+                const res = await fetch('http://localhost:3001/api/admin/orders');
+                allOrders = await res.json();
+                document.getElementById('orders-loading').style.display = 'none';
+                document.getElementById('orders-table-wrapper').style.display = 'block';
+                const tbody = document.querySelector('#orders-table tbody');
+                
+                tbody.innerHTML = allOrders.map(o => {
+                    const statusOptions = ['Processing', 'Shipped', 'Delivered', 'Cancelled'].map(s => 
+                        `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`
+                    ).join('');
+                    
+                    return `
+                    <tr>
+                        <td><strong>#${o.order_id}</strong></td>
+                        <td>${o.username || 'N/A'} <span style="color: #94a3b8;">(ID: ${o.user_id})</span></td>
+                        <td style="font-size:0.85rem; color:#a78bfa; max-width:220px; line-height:1.4;">${o.product_names || 'No items'}</td>
+                        <td>${new Date(o.order_date).toLocaleDateString('en-IN')}</td>
+                        <td>${o.items_count} items</td>
+                        <td><strong>₹${Math.round(o.total_amount).toLocaleString('en-IN')}</strong></td>
+                        <td><select class="status-select" id="status-${o.order_id}">${statusOptions}</select></td>
+                        <td>
+                            <button class="btn btn-sm btn-edit" onclick="updateStatus(${o.order_id})">Update</button>
+                            <button class="btn btn-sm btn-view" onclick="viewOrderDetails(${o.order_id})">👁️ View</button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        // NEW: Fetch Users
+        async function fetchUsers() {
+            try {
+                const res = await fetch('http://localhost:3001/api/admin/users');
+                const users = await res.json();
+                document.getElementById('users-loading').style.display = 'none';
+                document.getElementById('users-table-wrapper').style.display = 'block';
+                const tbody = document.querySelector('#users-table tbody');
+                tbody.innerHTML = users.map(u => `
+                    <tr>
+                        <td><strong>#${u.user_id}</strong></td>
+                        <td>${u.username}</td>
+                        <td>${u.email}</td>
+                        <td><span class="category-badge">${u.role || 'user'}</span></td>
+                        <td>${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
+                    </tr>
+                `).join('');
+            } catch(e) { console.error(e); }
+        }
+
+        function viewOrderDetails(orderId) {
+            const order = allOrders.find(o => o.order_id === orderId);
+            if(!order) return;
+            const content = document.getElementById('order-details-content');
+            content.innerHTML = `
+                <div class="order-detail-row"><label>Order ID</label><span>#${order.order_id}</span></div>
+                <div class="order-detail-row"><label>User</label><span>${order.username} (${order.email})</span></div>
+                <div class="order-detail-row"><label>Date</label><span>${new Date(order.order_date).toLocaleString()}</span></div>
+                <div class="order-detail-row"><label>Payment Method</label><span>${order.payment_method || 'N/A'}</span></div>
+                <div class="order-detail-row"><label>Shipping Address</label><span>${order.shipping_address || 'Not Provided'}</span></div>
+                <div class="order-detail-row"><label>Products</label><span>${order.product_names}</span></div>
+                <div class="order-detail-row" style="border:none"><label>Total Amount</label><span style="color:#22c55e; font-weight:bold">₹${Math.round(order.total_amount).toLocaleString('en-IN')}</span></div>
+            `;
+            document.getElementById('order-details-modal').classList.add('show');
+        }
+
+        async function updateStatus(orderId) {
+            const newStatus = document.getElementById(`status-${orderId}`).value;
+            try {
+                const res = await fetch('http://localhost:3001/api/admin/orders/status', {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: orderId, status: newStatus })
+                });
+                if (res.ok) alert('✅ Status Updated');
+                else alert('❌ Failed');
+            } catch (err) { alert('Error'); }
+        }
+
+        function openAddProductModal() {
+            editingProductId = null;
+            document.getElementById('modal-title').textContent = 'Add New Product';
+            document.getElementById('product-form').reset();
+            document.getElementById('product-modal').classList.add('show');
+        }
+
+        async function editProduct(id) {
+            const res = await fetch(`http://localhost:3001/api/products/${id}`);
+            const p = await res.json();
+            editingProductId = id;
+            document.getElementById('modal-title').textContent = 'Edit Product';
+            document.getElementById('product-name').value = p.name;
+            document.getElementById('product-description').value = p.description;
+            document.getElementById('product-price').value = p.price;
+            document.getElementById('product-stock').value = p.stock_quantity;
+            document.getElementById('product-category').value = p.category;
+            document.getElementById('product-image').value = p.image_url;
+            document.getElementById('product-modal').classList.add('show');
+        }
+
+        function closeProductModal() { document.getElementById('product-modal').classList.remove('show'); }
+
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const p = {
+                name: document.getElementById('product-name').value,
+                description: document.getElementById('product-description').value,
+                price: parseFloat(document.getElementById('product-price').value),
+                stock_quantity: parseInt(document.getElementById('product-stock').value),
+                category: document.getElementById('product-category').value,
+                image_url: document.getElementById('product-image').value || 'https://images.pexels.com/photos/325153/pexels-photo-325153.jpeg'
+            };
+            const url = editingProductId ? `http://localhost:3001/api/admin/products/${editingProductId}` : 'http://localhost:3001/api/admin/products';
+            const method = editingProductId ? 'PUT' : 'POST';
+            
+            await fetch(url, { method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p) });
+            closeProductModal(); loadAdminData();
+        });
+
+        async function deleteProduct(id, name) {
+            if(confirm(`Delete ${name}?`)) {
+                await fetch(`http://localhost:3001/api/admin/products/${id}`, { method: 'DELETE' });
+                loadAdminData();
+            }
+        }
+    </script>
+</body>
+</html>

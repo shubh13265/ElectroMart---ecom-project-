@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Electro-Mart | Shop</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+        /* [Original CSS - Kept Exact] */
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #0f172a; margin: 0; padding-top: 72px; color: #0f172a; }
+        .navbar { background: rgba(15,23,42,0.96); backdrop-filter: blur(12px); padding: 0 18px; display: flex; justify-content: space-between; align-items: center; height: 72px; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; border-bottom: 1px solid rgba(148,163,184,0.35); }
+        .nav-left { display: flex; align-items: center; gap: 12px; color: #e5e7eb; }
+        .nav-logo svg { width: 38px; height: 38px; filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.5)); }
+        .nav-left h2 { margin: 0; font-size: 1.1rem; letter-spacing: 0.5px; font-weight: 700; background: linear-gradient(to right, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-left span { font-size: 0.75rem; color: #9ca3af; }
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+        #welcome-msg { font-size: 0.9rem; color: #e5e7eb; display: none; }
+        .nav-btn, #logout-btn { background: #1d4ed8; color: white; padding: 8px 14px; border: none; border-radius: 999px; cursor: pointer; font-size: 0.8rem; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        .nav-btn.secondary { background: #334155; }
+        .nav-btn span.badge { background: #f97316; color: white; border-radius: 999px; padding: 1px 6px; font-size: 0.7rem; }
+        .main-wrapper { max-width: 1200px; margin: 24px auto; padding: 0 18px 40px 18px; }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+        .toolbar input, .toolbar select { padding: 7px 9px; border-radius: 999px; border: 1px solid #cbd5f5; font-size: 0.8rem; }
+        .toolbar input { min-width: 170px; flex: 1; }
+        .shop-title { color: #f9fafb; margin: 0 0 4px 0; font-size: 1.4rem; }
+        .shop-sub { color: #9ca3af; margin: 0 0 14px 0; font-size: 0.85rem; }
+        #product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
+        .product-card { background: #f9fafb; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25); display: flex; flex-direction: column; min-height: 100%; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 18px 32px rgba(15,23,42,0.35); }
+        .product-image-wrapper { position: relative; overflow: hidden; height: 170px; }
+        .product-image-wrapper img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .product-tag { position: absolute; top: 10px; left: 10px; background: rgba(15,23,42,0.9); color: #f9fafb; padding: 3px 9px; border-radius: 999px; font-size: 0.7rem; }
+        .stock-badge { position: absolute; top: 10px; right: 10px; background: #22c55e; color: white; padding: 3px 8px; border-radius: 999px; font-size: 0.65rem; font-weight: 600; }
+        .stock-badge.low { background: #f97316; }
+        .stock-badge.out { background: #ef4444; }
+        .product-body { padding: 14px 14px 12px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+        .product-body h3 { margin: 0; font-size: 1rem; color: #0f172a; }
+        .product-body p { margin: 0; font-size: 0.8rem; color: #6b7280; min-height: 34px; }
+        .product-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+        .price { font-size: 1.1rem; font-weight: 700; color: #16a34a; }
+        .stock { font-size: 0.7rem; color: #6b7280; }
+        .product-footer { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 14px 14px; gap: 8px; }
+        .buy-btn, .cart-btn { flex: 1; padding: 7px 10px; border-radius: 999px; border: none; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+        .buy-btn { background: #22c55e; color: white; }
+        .cart-btn { background: #e5e7eb; color: #111827; }
+        .buy-btn:disabled, .cart-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        #product-list.empty { display: flex; align-items: center; justify-content: center; min-height: 200px; color: #e5e7eb; font-size: 0.95rem; }
+
+        /* CHECKOUT MODAL STYLES (UPDATED FOR MODERN INPUTS) */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1200; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-content { background: #f9fafb; border-radius: 18px; width: 90%; max-width: 450px; padding: 25px; box-shadow: 0 20px 44px rgba(15,23,42,0.55); max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+        .modal-header h3 { margin: 0; font-size: 1.2rem; color: #111827; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+        
+        .checkout-step { margin-bottom: 20px; }
+        .step-title { font-size: 0.9rem; font-weight: 700; color: #4b5563; margin-bottom: 10px; text-transform: uppercase; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #6b7280; margin-bottom: 5px; }
+        
+        /* Modern Inputs */
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; font-family: 'Poppins', sans-serif; transition: 0.2s; }
+        .form-group input:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1); outline: none; }
+
+        .payment-options { display: flex; gap: 10px; margin-bottom: 15px; }
+        .payment-opt { flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; background: white; }
+        .payment-opt:hover { background: #f3f4f6; }
+        .payment-opt.selected { border-color: #6366f1; background: #e0e7ff; color: #4338ca; font-weight: 600; box-shadow: 0 2px 5px rgba(99, 102, 241, 0.2); }
+        
+        /* MODERN PAYMENT INPUTS */
+        .payment-input-group { position: relative; margin-bottom: 12px; }
+        .payment-input-group .icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: #94a3b8; }
+        .payment-input-group input { width: 100%; padding: 12px 12px 12px 42px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; font-size: 0.95rem; color: #1e293b; transition: all 0.2s; }
+        .payment-input-group input:focus { background: #fff; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); outline: none; }
+        .payment-row { display: flex; gap: 12px; }
+
+        .order-summary { background: #f3f4f6; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
+        .summary-row.total { font-weight: 700; border-top: 1px solid #d1d5db; padding-top: 5px; margin-top: 5px; font-size: 1rem; color: #111827; }
+        
+        .place-order-btn { width: 100%; background: #22c55e; color: white; padding: 14px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); }
+        .place-order-btn:hover { background: #16a34a; transform: translateY(-1px); }
+        .place-order-btn:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; }
+
+        /* Invoice Style */
+        .invoice-box { text-align: center; padding: 20px; }
+        .invoice-icon { font-size: 48px; color: #22c55e; margin-bottom: 10px; }
+        .invoice-message { color: #4b5563; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.6; }
+        .invoice-details { text-align: left; background: #fff; padding: 15px; border: 1px dashed #d1d5db; border-radius: 8px; margin: 15px 0; font-size: 0.85rem; }
+        .action-btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .download-btn { background: #3b82f6; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+        .print-btn { background: #4b5563; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+
+        /* OTP MODAL SPECIFIC */
+        .otp-input { font-size: 24px; letter-spacing: 12px; text-align: center; width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; margin: 20px 0; font-weight: 700; color: #334155; }
+        .otp-input:focus { border-color: #6366f1; outline: none; }
+
+        /* General Alert Modal */
+        .alert-modal-content { background: #f9fafb; border-radius: 18px; width: 90%; max-width: 360px; padding: 22px 22px 18px 22px; text-align: center; box-shadow: 0 20px 44px rgba(15,23,42,0.55); }
+        .alert-icon { font-size: 42px; margin-bottom: 10px; }
+
+        @media (max-width: 640px) { .navbar { padding: 0 12px; } .main-wrapper { padding: 0 12px 32px 12px; } .toolbar { flex-direction: column; align-items: stretch; } .toolbar input, .toolbar select { width: 100%; } }
+
+        @media print { body * { visibility: hidden; } .modal-overlay, .modal-content, .invoice-box, .invoice-details, .invoice-details * { visibility: visible; } .modal-overlay { position: absolute; left: 0; top: 0; background: white; } .modal-content { box-shadow: none; width: 100%; max-width: 100%; padding: 0; margin: 0; position: absolute; left: 0; top: 0; } .action-btn-group, .close-btn, .invoice-icon, .invoice-message, .nav-btn { display: none !important; } .invoice-details { border: 1px solid #000; margin: 20px; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="nav-logo">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="gradBolt" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M12 16 H18 L24 44 H50 L56 20 H22" stroke="url(#grad1)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="rgba(56, 189, 248, 0.1)"/>
+                    <circle cx="26" cy="52" r="3.5" fill="#3b82f6"/>
+                    <circle cx="48" cy="52" r="3.5" fill="#3b82f6"/>
+                    <path d="M38 8 L32 28 H42 L36 48" stroke="url(#gradBolt)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <h2>Electro-Mart</h2>
+                <span>Your Tech Superstore</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <span id="welcome-msg"></span>
+            <button class="nav-btn secondary" onclick="window.location.href='profile.html'">👤 Profile</button>
+            <button class="nav-btn secondary" id="my-orders-btn">📦 Orders</button>
+            <button class="nav-btn" onclick="window.location.href='cart.html'">🛒 Cart <span class="badge" id="cart-count">0</span></button>
+            <button class="nav-btn secondary" onclick="window.location.href='admin.html'">🛡️ Admin</button>
+            <button id="logout-btn">Logout</button>
+        </div>
+    </nav>
+
+    <main class="main-wrapper">
+        <h1 class="shop-title">Our Featured Products</h1>
+        <p class="shop-sub">Browse products from the database, add them to cart or buy instantly. All prices in Indian Rupees (₹).</p>
+
+        <section class="toolbar">
+            <input type="text" id="search-input" placeholder="Search products by name..." />
+            <select id="category-filter">
+                <option value="all">All categories</option>
+                <option value="audio">Audio</option>
+                <option value="wearable">Wearables</option>
+                <option value="accessory">Accessories</option>
+                <option value="peripheral">Peripherals</option>
+                <option value="clothing">Clothing</option>
+                <option value="home">Home</option>
+                <option value="storage">Storage</option>
+                <option value="gadget">Gadgets</option>
+            </select>
+            <select id="sort-select">
+                <option value="default">Sort: Default</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="name-asc">Name: A → Z</option>
+                <option value="name-desc">Name: Z → A</option>
+            </select>
+        </section>
+
+        <section id="product-list"></section>
+    </main>
+
+    <div class="modal-overlay" id="checkout-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🛍️ Checkout</h3>
+                <button class="close-btn" onclick="closeCheckout()">×</button>
+            </div>
+            
+            <div id="checkout-form-content">
+                <div class="checkout-step">
+                    <div class="step-title">1. Delivery Address</div>
+                    <div class="form-group">
+                        <label>Receiver Name</label>
+                        <input type="text" id="ship-name" placeholder="Full Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number (+91)</label>
+                        <input type="tel" id="ship-phone" placeholder="9876543210" maxlength="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea id="ship-address" rows="2" placeholder="House No, Street, City, Pincode" required></textarea>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span>Product</span>
+                        <span id="summary-product">Loading...</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total Amount</span>
+                        <span id="summary-total">₹0</span>
+                    </div>
+                </div>
+
+                <div class="checkout-step">
+                    <div class="step-title">2. Payment Method</div>
+                    <div class="payment-options">
+                        <div class="payment-opt" onclick="selectPayment('card', this)">💳 Card</div>
+                        <div class="payment-opt" onclick="selectPayment('upi', this)">📱 UPI</div>
+                        <div class="payment-opt selected" onclick="selectPayment('cod', this)">💵 COD</div>
+                    </div>
+                    
+                    <div id="card-details" style="display:none; margin-top:15px;">
+                        <div class="payment-input-group">
+                            <span class="icon">💳</span>
+                            <input type="text" placeholder="Card Number" maxlength="19">
+                        </div>
+                        <div class="payment-row">
+                            <div class="payment-input-group">
+                                <span class="icon">📅</span>
+                                <input type="text" placeholder="MM/YY" maxlength="5">
+                            </div>
+                            <div class="payment-input-group">
+                                <span class="icon">🔒</span>
+                                <input type="password" placeholder="CVV" maxlength="3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="upi-details" style="display:none; margin-top:15px;">
+                        <div class="payment-input-group">
+                            <span class="icon">@</span>
+                            <input type="text" placeholder="Enter UPI ID (e.g. user@okhdfc)">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="place-order-btn" id="confirm-order-btn">Place Order</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="otp-modal">
+        <div class="modal-content" style="text-align: center;">
+            <h3>🔐 Bank Verification</h3>
+            <p style="color: #6b7280; margin-bottom: 20px;">Enter the 4-digit OTP sent to your mobile.</p>
+            <input type="text" class="otp-input" id="otp-value" maxlength="4" placeholder="••••">
+            <button class="place-order-btn" onclick="verifyOtp()">Verify & Pay</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="invoice-modal">
+        <div class="modal-content">
+            <div class="invoice-box">
+                <div class="invoice-icon">✅</div>
+                <h2>Order Placed!</h2>
+                
+                <div class="invoice-message">
+                    Thank you for your purchase! Your order has been placed successfully.<br>
+                    <strong>We will deliver your item on <span id="delivery-date" style="color: #22c55e;"></span></strong>
+                </div>
+                
+                <div class="invoice-details" id="printable-invoice">
+                    <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">INVOICE</h3>
+                    <p><strong>Order ID:</strong> <span id="inv-id">#</span></p>
+                    <p><strong>Date:</strong> <span id="inv-date">-</span></p>
+                    <p><strong>Payment:</strong> <span id="inv-payment">-</span></p>
+                    <p><strong>Billed To:</strong><br><span id="inv-address">-</span></p>
+                    <hr style="margin: 10px 0; border: 0; border-top: 1px dashed #ccc;">
+                    <p><strong>Item:</strong> <span id="inv-product-name">-</span></p>
+                    <p style="font-size: 1.1rem; font-weight: 700; text-align: right;">Total Paid: <span id="inv-total">₹0</span></p>
+                </div>
+
+                <div class="action-btn-group">
+                    <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+                    <button class="download-btn" id="download-pdf-btn">⬇️ Download PDF</button>
+                </div>
+                <button class="nav-btn secondary" onclick="closeCheckout()" style="margin-top: 15px; background: #e5e7eb; color: #374151; width: 100%;">Close Window</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="alert-modal">
+        <div class="alert-modal-content" style="background:#fff; padding:25px; border-radius:12px; text-align:center;">
+            <div class="alert-icon" id="alert-icon" style="font-size:40px; margin-bottom:10px;">⚠️</div>
+            <h3 id="alert-title" style="margin:0 0 10px 0;">Alert</h3>
+            <p id="alert-message" style="color:#666; margin-bottom:20px;"></p>
+            <button class="nav-btn" onclick="document.getElementById('alert-modal').classList.remove('show')" style="width:100%;">OK</button>
+        </div>
+    </div>
+
+   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const welcomeMsg = document.getElementById('welcome-msg');
+        const productList = document.getElementById('product-list');
+        const logoutBtn = document.getElementById('logout-btn');
+        const myOrdersBtn = document.getElementById('my-orders-btn');
+        const cartCount = document.getElementById('cart-count');
+        const searchInput = document.getElementById('search-input');
+        const categoryFilter = document.getElementById('category-filter');
+        const sortSelect = document.getElementById('sort-select');
+
+        // Modal Elements
+        const checkoutModal = document.getElementById('checkout-modal');
+        const checkoutContent = document.getElementById('checkout-form-content');
+        const invoiceModal = document.getElementById('invoice-modal');
+        const otpModal = document.getElementById('otp-modal');
+        const confirmOrderBtn = document.getElementById('confirm-order-btn');
+        const alertModal = document.getElementById('alert-modal');
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+
+        let currentProduct = null;
+        let selectedPayment = 'cod';
+
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            alert('You must be logged in to view this page.');
+            window.location.href = 'index.html';
+            return;
+        }
+        welcomeMsg.style.display = 'inline';
+        welcomeMsg.textContent = `Hi, ${user.username}`;
+
+        async function updateCartCount() {
+            try {
+                const res = await fetch(`http://localhost:3001/api/cart/${user.user_id}`);
+                const cartItems = await res.json();
+                const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+                cartCount.textContent = totalItems;
+            } catch (err) { console.error(err); }
+        }
+
+        logoutBtn.addEventListener('click', () => { localStorage.removeItem('user'); window.location.href = 'index.html'; });
+        myOrdersBtn.addEventListener('click', () => window.location.href = 'orders.html');
+
+        function showAlert(title, msg, icon = '⚠️') {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = msg;
+            document.getElementById('alert-icon').textContent = icon;
+            alertModal.classList.add('show');
+        }
+
+        // SERVER-SIDE SEARCH LOGIC
+        async function fetchProducts() {
+            productList.innerHTML = '<div class="empty">Loading products...</div>';
+            const search = searchInput.value.trim();
+            const category = categoryFilter.value;
+            const sort = sortSelect.value;
+
+            try {
+                // Send filters to SERVER
+                const res = await fetch(`http://localhost:3001/api/products?search=${search}&category=${category}&sort=${sort}`);
+                const products = await res.json();
+                
+                renderProducts(products);
+            } catch (err) { productList.innerHTML = '<div class="empty">Failed to load products.</div>'; }
+        }
+
+        // Trigger search on input change
+        searchInput.addEventListener('input', fetchProducts);
+        categoryFilter.addEventListener('change', fetchProducts);
+        sortSelect.addEventListener('change', fetchProducts);
+
+        function renderProducts(products) {
+            if (!products.length) {
+                productList.classList.add('empty');
+                productList.innerHTML = 'No products found.';
+                return;
+            }
+            productList.classList.remove('empty');
+            productList.innerHTML = '';
+            products.forEach(p => {
+                const priceInr = Math.round(p.price);
+                const stock = p.stock_quantity || 0;
+                const isOutOfStock = stock === 0;
+                
+                let stockBadge = isOutOfStock ? '<span class="stock-badge out">Out of Stock</span>' : 
+                                 (stock < 10 ? `<span class="stock-badge low">Only ${stock} left</span>` : `<span class="stock-badge">In Stock</span>`);
+                
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div class="product-image-wrapper">
+                        <img src="${p.image_url}" alt="${p.name}" />
+                        <span class="product-tag">${p.category}</span>
+                        ${stockBadge}
+                    </div>
+                    <div class="product-body">
+                        <h3>${p.name}</h3>
+                        <p>${p.description || 'High quality product.'}</p>
+                        <div class="product-meta">
+                            <span class="price">₹${priceInr.toLocaleString('en-IN')}</span>
+                            <span class="stock">Stock: ${stock}</span>
+                        </div>
+                    </div>
+                    <div class="product-footer">
+                        <button class="cart-btn" data-id="${p.product_id}" ${isOutOfStock ? 'disabled' : ''}>Add to Cart</button>
+                        <button class="buy-btn" data-id="${p.product_id}" ${isOutOfStock ? 'disabled' : ''}>Buy Now</button>
+                    </div>
+                `;
+                
+                const buyBtn = card.querySelector('.buy-btn');
+                buyBtn.onclick = () => openCheckout(p);
+
+                const cartBtn = card.querySelector('.cart-btn');
+                cartBtn.onclick = () => addToCart(p, cartBtn);
+
+                productList.appendChild(card);
+            });
+        }
+
+        // --- CHECKOUT & OTP LOGIC ---
+        window.openCheckout = (product) => {
+            currentProduct = product;
+            document.getElementById('ship-name').value = user.username || '';
+            document.getElementById('ship-phone').value = user.phone || '';
+            document.getElementById('ship-address').value = user.address || '';
+            document.getElementById('summary-product').textContent = `1 x ${product.name}`;
+            document.getElementById('summary-total').textContent = `₹${Math.round(product.price).toLocaleString('en-IN')}`;
+            
+            checkoutContent.style.display = 'block';
+            checkoutModal.classList.add('show');
+            invoiceModal.classList.remove('show');
+        };
+
+        window.closeCheckout = () => {
+            checkoutModal.classList.remove('show');
+            invoiceModal.classList.remove('show');
+            otpModal.classList.remove('show');
+            fetchProducts(); // Refresh stock
+        };
+
+        window.selectPayment = (method, btn) => {
+            selectedPayment = method;
+            document.querySelectorAll('.payment-opt').forEach(opt => opt.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('card-details').style.display = method === 'card' ? 'block' : 'none';
+            document.getElementById('upi-details').style.display = method === 'upi' ? 'block' : 'none';
+        };
+
+        confirmOrderBtn.onclick = () => {
+            const shipName = document.getElementById('ship-name').value;
+            const shipPhone = document.getElementById('ship-phone').value;
+            const shipAddress = document.getElementById('ship-address').value;
+
+            if (!shipName || !shipPhone || !shipAddress) {
+                showAlert('Missing Details', 'Please fill in all address details.');
+                return;
+            }
+
+            // OTP LOGIC: If NOT COD, show OTP modal
+            if (selectedPayment !== 'cod') {
+                checkoutModal.classList.remove('show');
+                otpModal.classList.add('show');
+            } else {
+                placeOrder(); // Direct order for COD
+            }
+        };
+
+        window.verifyOtp = () => {
+            const otp = document.getElementById('otp-value').value;
+            if (otp === '1234') {
+                otpModal.classList.remove('show');
+                placeOrder();
+            } else {
+                alert('Invalid OTP. Please enter 1234.');
+            }
+        };
+
+        async function placeOrder() {
+            const shipName = document.getElementById('ship-name').value;
+            const shipPhone = document.getElementById('ship-phone').value;
+            const shipAddress = document.getElementById('ship-address').value;
+            const fullAddress = `${shipName}, ${shipAddress}, Phone: ${shipPhone}`;
+
+            try {
+                const response = await fetch('http://localhost:3001/api/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.user_id,
+                        productId: currentProduct.product_id,
+                        totalAmount: currentProduct.price,
+                        shippingAddress: fullAddress,
+                        paymentMethod: selectedPayment.toUpperCase()
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const today = new Date();
+                    const deliveryDate = new Date(today);
+                    deliveryDate.setDate(today.getDate() + 2);
+                    const dateString = deliveryDate.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                    checkoutModal.classList.remove('show'); // Ensure closed
+                    invoiceModal.classList.add('show'); // Show Invoice
+                    
+                    document.getElementById('inv-id').textContent = '#' + data.orderId;
+                    document.getElementById('inv-date').textContent = new Date().toLocaleDateString();
+                    document.getElementById('inv-payment').textContent = selectedPayment.toUpperCase();
+                    document.getElementById('inv-address').textContent = fullAddress;
+                    document.getElementById('inv-product-name').textContent = currentProduct.name;
+                    document.getElementById('inv-total').textContent = `₹${Math.round(currentProduct.price).toLocaleString('en-IN')}`;
+                    document.getElementById('delivery-date').textContent = dateString;
+
+                } else {
+                    showAlert('Order Failed', data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                showAlert('Error', 'Connection Error');
+            }
+        };
+
+        // DOWNLOAD PDF FUNCTION
+        downloadPdfBtn.onclick = () => {
+            const element = document.getElementById('printable-invoice');
+            const opt = {
+                margin:       10,
+                filename:     `Order_${document.getElementById('inv-id').textContent}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        };
+
+        async function addToCart(product, btn) {
+            btn.disabled = true;
+            btn.textContent = 'Adding...';
+            try {
+                const response = await fetch('http://localhost:3001/api/cart/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.user_id, productId: product.product_id, quantity: 1 })
+                });
+                if (response.ok) {
+                    showAlert('Success', `${product.name} added to cart!`, '🎉');
+                    updateCartCount();
+                } else {
+                    showAlert('Error', 'Failed to add item.');
+                }
+            } catch (e) { console.error(e); }
+            btn.disabled = false;
+            btn.textContent = 'Add to Cart';
+        }
+
+        updateCartCount();
+        fetchProducts();
+    });
+</script>
+</body>
+</html>

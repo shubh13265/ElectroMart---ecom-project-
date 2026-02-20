@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #0f172a; margin: 0; padding-top: 72px; color: #0f172a; }
+        .navbar { background: rgba(15,23,42,0.96); backdrop-filter: blur(12px); padding: 0 18px; display: flex; justify-content: space-between; align-items: center; height: 72px; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; border-bottom: 1px solid rgba(148,163,184,0.35); }
+        .navbar h2 { margin: 0; font-size: 1rem; color: #e5e7eb; }
+        .navbar span { display: block; font-size: 0.75rem; color: #9ca3af; }
+        .nav-btn { background: #22c55e; color: white; padding: 8px 16px; border: none; border-radius: 999px; cursor: pointer; font-size: 0.8rem; font-weight: 500; }
+        .container { max-width: 800px; margin: 24px auto 40px auto; padding: 0 18px; }
+        .profile-card { background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 20px; padding: 30px; margin-bottom: 24px; color: white; text-align: center; }
+        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 16px auto; }
+        .profile-card h1 { margin: 0 0 4px 0; font-size: 1.8rem; }
+        .profile-card p { margin: 0; opacity: 0.9; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .info-card { background: #1e293b; border-radius: 14px; padding: 18px; border: 1px solid #334155; }
+        .info-card h3 { margin: 0 0 8px 0; font-size: 0.85rem; color: #94a3b8; }
+        .info-card .value { font-size: 1.6rem; font-weight: 700; color: #22c55e; }
+        .section { background: #1e293b; border-radius: 14px; padding: 20px; margin-bottom: 20px; border: 1px solid #334155; }
+        .section h2 { margin: 0 0 14px 0; color: #f9fafb; font-size: 1.2rem; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #334155; font-size: 0.9rem; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-row label { color: #94a3b8; }
+        .detail-row span { color: #e5e7eb; font-weight: 500; text-align: right; max-width: 60%; }
+        .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .action-btn { flex: 1; min-width: 140px; padding: 12px 20px; border: none; border-radius: 999px; cursor: pointer; font-size: 0.9rem; font-weight: 500; }
+        .action-btn.primary { background: #22c55e; color: white; }
+        .action-btn.secondary { background: #6366f1; color: white; }
+        .action-btn.danger { background: #ef4444; color: white; }
+        .action-btn.edit { background: #f59e0b; color: white; margin-bottom: 20px; width: 100%; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.2s; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-content { background: #1e293b; padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; border: 1px solid #334155; }
+        .modal-content h3 { color: white; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: #94a3b8; margin-bottom: 5px; font-size: 0.9rem; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div><h2>User Profile</h2><span>Manage your account</span></div>
+        <button class="nav-btn" onclick="window.location.href='shop.html'">← Back to Shop</button>
+    </nav>
+
+    <div class="container">
+        <div class="profile-card">
+            <div class="profile-avatar">👤</div>
+            <h1 id="profile-name">Loading...</h1>
+            <p id="profile-email">Loading...</p>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card"><h3>Total Orders</h3><div class="value" id="total-orders">0</div></div>
+            <div class="info-card"><h3>Total Spent</h3><div class="value" id="total-spent">₹0</div></div>
+            <div class="info-card"><h3>Status</h3><div class="value" style="font-size: 1.2rem; color: #22c55e;">✓ Active</div></div>
+        </div>
+
+        <button class="action-btn edit" onclick="openEditModal()">✏️ Edit Profile</button>
+
+        <div class="section">
+            <h2>Account Details</h2>
+            <div class="detail-row"><label>Username</label><span id="username">-</span></div>
+            <div class="detail-row"><label>Email</label><span id="email">-</span></div>
+            <div class="detail-row"><label>Phone</label><span id="display-phone">-</span></div>
+            <div class="detail-row"><label>Address</label><span id="display-address">-</span></div>
+            <div class="detail-row"><label>Member Since</label><span id="member-since">-</span></div>
+        </div>
+
+        <div class="section">
+            <h2>Quick Actions</h2>
+            <div class="action-buttons">
+                <button class="action-btn primary" onclick="window.location.href='shop.html'">🛒 Shop</button>
+                <button class="action-btn secondary" onclick="window.location.href='orders.html'">📦 Orders</button>
+                <button class="action-btn secondary" onclick="window.location.href='cart.html'">🛍️ Cart</button>
+                <button class="action-btn danger" onclick="logout()">🚪 Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-content">
+            <h3>Edit Profile</h3>
+            <form id="edit-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="edit-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number (+91)</label>
+                    <input type="tel" id="edit-phone" pattern="[0-9]{10}" maxlength="10" required>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea id="edit-address" rows="3" placeholder="Enter delivery address"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="action-btn primary">Save Changes</button>
+                    <button type="button" class="action-btn danger" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) { alert('Please login first'); window.location.href = 'index.html'; return; }
+
+            // Initial Display
+            updateDisplay(user);
+            fetchStats(user);
+
+            // Edit Form Handler
+            document.getElementById('edit-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newUsername = document.getElementById('edit-username').value;
+                const newPhone = document.getElementById('edit-phone').value;
+                const newAddress = document.getElementById('edit-address').value;
+
+                try {
+                    const res = await fetch('http://localhost:3001/api/user/update', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: user.user_id,
+                            username: newUsername,
+                            phone: newPhone,
+                            address: newAddress
+                        })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        updateDisplay(data.user);
+                        closeEditModal();
+                        alert('✅ Profile updated successfully!');
+                    } else {
+                        alert('❌ ' + data.message);
+                    }
+                } catch (err) { alert('Failed to update profile'); }
+            });
+        });
+
+        function updateDisplay(user) {
+            document.getElementById('profile-name').textContent = user.username;
+            document.getElementById('profile-email').textContent = user.email;
+            document.getElementById('username').textContent = user.username;
+            document.getElementById('email').textContent = user.email;
+            document.getElementById('display-phone').textContent = user.phone ? '+91 ' + user.phone : 'Not set';
+            document.getElementById('display-address').textContent = user.address || 'Not set';
+            
+            if (user.created_at) {
+                const date = new Date(user.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('member-since').textContent = date;
+            }
+        }
+
+        async function fetchStats(user) {
+            try {
+                const res = await fetch(`http://localhost:3001/api/my-orders/${user.user_id}`);
+                const orders = await res.json();
+                if (res.ok && Array.isArray(orders)) {
+                    const unique = new Set(orders.map(o => o.order_id));
+                    document.getElementById('total-orders').textContent = unique.size;
+                    
+                    let total = 0;
+                    orders.forEach(o => total += o.quantity * (o.price_per_item || 0));
+                    document.getElementById('total-spent').textContent = '₹' + Math.round(total).toLocaleString('en-IN');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function openEditModal() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            document.getElementById('edit-username').value = user.username;
+            document.getElementById('edit-phone').value = user.phone || '';
+            document.getElementById('edit-address').value = user.address || '';
+            document.getElementById('edit-modal').classList.add('show');
+        }
+
+        function closeEditModal() { document.getElementById('edit-modal').classList.remove('show'); }
+
+        function logout() {
+            if (confirm('Are you sure?')) { localStorage.removeItem('user'); localStorage.removeItem('cart'); window.location.href = 'index.html'; }
+        }
+    </script>
+</body>
+</html>
