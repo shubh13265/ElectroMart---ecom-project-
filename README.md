@@ -2,7 +2,6 @@
 
 A full-stack e-commerce application with user authentication, product management and tracking , shopping cart functionality, and an advanced admin dashboard.
 
----
 
 ## 👨‍💻 Author
 
@@ -13,12 +12,13 @@ Full-Stack Developer || DataBase Management
 
 ## ✨ Features
 
-### 🔐 **Authentication & User Management**
-- User registration with bcryptjs password hashing
-- Secure login with credential verification
-- User profile management (update username, phone, address)
-- Role-based access (user/admin)
-
+1. **User Authentication**: Secure registration and login with bcrypt password hashing
+2. **Product Management:** Browse and search products with detailed information
+3. **Shopping Cart:** Add, update, and remove items from cart
+4. **Order Processing:** Complete checkout and view order history
+5. **Admin Panel:** Manage products, orders, and view analytics
+6. **User Profile:** Update personal information and view order history
+7. **Responsive Design:** Modern UI with particle effects and smooth animations
 ---
 
 ## 🛠️ Tech Stack
@@ -76,9 +76,29 @@ cd ecom-project
 ```bash
 npm install
 ```
+### **Step 3 : Create .env file**
+
+Copy .env.example to .env and add your credentials:
+
+```bash
+DB_HOST=your-database-host.aivencloud.com
+DB_USER=your-username
+DB_PASSWORD=your-password
+DB_NAME=your database name
+DB_PORT=24468
+NODE_ENV=development
+```
+### ** Step 4 : Start the development server**
+```bash
+npm start
+```
+### ** Step 5 : Access locally**
+
+Backend: http://localhost:3001
+Frontend: Open index.html in your browser
 ---
 
-## 📧 Contact
+## 📧 Author
 
 **Shubham Kumar**
 
@@ -88,3 +108,4 @@ npm install
 - **Phone:** [7857867961]
 
 ---
+⭐ Star this repo if you find it helpful!
